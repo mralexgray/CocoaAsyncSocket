@@ -15,71 +15,59 @@ static DDASLLogger *sharedInstance;
  *
  * This method may also be called directly (assumably by accident), hence the safety mechanism.
 **/
-+ (void)initialize
-{
++ (void)initialize{
+
 	static BOOL initialized = NO;
 	if (!initialized)
 	{
 		initialized = YES;
-		
 		sharedInstance = [[DDASLLogger alloc] init];
 	}
 }
++ (DDASLLogger *)sharedInstance{
 
-+ (DDASLLogger *)sharedInstance
-{
 	return sharedInstance;
 }
+- (id)init{
 
-- (id)init
-{
 	if (sharedInstance != nil)
 	{
 		[self release];
 		return nil;
 	}
-	
 	if ((self = [super init]))
 	{
 		// A default asl client is provided for the main thread,
 		// but background threads need to create their own client.
-		
 		client = asl_open(NULL, "com.apple.console", 0);
 	}
 	return self;
 }
+- (void)logMessage:(DDLogMessage *)logMessage{
 
-- (void)logMessage:(DDLogMessage *)logMessage
-{
 	NSString *logMsg = logMessage->logMsg;
-	
 	if (formatter)
 	{
 		logMsg = [formatter formatLogMessage:logMessage];
 	}
-	
 	if (logMsg)
 	{
 		const char *msg = [logMsg UTF8String];
-		
 		int aslLogLevel;
 		switch (logMessage->logLevel)
 		{
 			// Note: By default ASL will filter anything above level 5 (Notice).
 			// So our mappings shouldn't go above that level.
-			
 			case 1  : aslLogLevel = ASL_LEVEL_CRIT;    break;
 			case 2  : aslLogLevel = ASL_LEVEL_ERR;     break;
 			case 3  : aslLogLevel = ASL_LEVEL_WARNING; break;
 			default : aslLogLevel = ASL_LEVEL_NOTICE;  break;
 		}
-		
 		asl_log(client, NULL, aslLogLevel, "%s", msg);
 	}
 }
+- (NSString *)loggerName{
 
-- (NSString *)loggerName
-{
 	return @"cocoa.lumberjack.aslLogger";
 }
 

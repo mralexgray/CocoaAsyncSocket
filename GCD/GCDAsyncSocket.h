@@ -23,8 +23,8 @@ extern NSString *const GCDAsyncSocketSSLCipherSuites;
 extern NSString *const GCDAsyncSocketSSLDiffieHellmanParameters;
 #endif
 
-enum GCDAsyncSocketError
-{
+enum GCDAsyncSocketError{
+
 	GCDAsyncSocketNoError = 0,           // Never used
 	GCDAsyncSocketBadConfigError,        // Invalid configuration
 	GCDAsyncSocketBadParamError,         // Invalid parameter was passed
@@ -39,22 +39,18 @@ typedef enum GCDAsyncSocketError GCDAsyncSocketError;
 
 #pragma mark -
 
-@interface GCDAsyncSocket : NSObject
-{
+@interface GCDAsyncSocket : NSObject{
+
 	uint32_t flags;
 	uint16_t config;
-	
 	id delegate;
 	dispatch_queue_t delegateQueue;
-	
 	int socket4FD;
 	int socket6FD;
 	int connectIndex;
 	NSData * connectInterface4;
 	NSData * connectInterface6;
-	
 	dispatch_queue_t socketQueue;
-	
 	dispatch_source_t accept4Source;
 	dispatch_source_t accept6Source;
 	dispatch_source_t connectTimer;
@@ -62,15 +58,11 @@ typedef enum GCDAsyncSocketError GCDAsyncSocketError;
 	dispatch_source_t writeSource;
 	dispatch_source_t readTimer;
 	dispatch_source_t writeTimer;
-	
 	NSMutableArray *readQueue;
 	NSMutableArray *writeQueue;
-	
 	GCDAsyncReadPacket *currentRead;
 	GCDAsyncWritePacket *currentWrite;
-	
 	unsigned long socketFDBytesAvailable;
-	
 	NSMutableData *partialReadBuffer;
 		
 #if TARGET_OS_IPHONE
@@ -82,7 +74,6 @@ typedef enum GCDAsyncSocketError GCDAsyncSocketError;
 	NSMutableData *sslReadBuffer;
 	size_t sslWriteCachedLength;
 #endif
-	
 	id userData;
 }
 
@@ -106,15 +97,12 @@ typedef enum GCDAsyncSocketError GCDAsyncSocketError;
 - (id)initWithDelegate:(id)aDelegate delegateQueue:(dispatch_queue_t)dq socketQueue:(dispatch_queue_t)sq;
 
 #pragma mark Configuration
-
 - (id)delegate;
 - (void)setDelegate:(id)delegate;
 - (void)synchronouslySetDelegate:(id)delegate;
-
 - (dispatch_queue_t)delegateQueue;
 - (void)setDelegateQueue:(dispatch_queue_t)delegateQueue;
 - (void)synchronouslySetDelegateQueue:(dispatch_queue_t)delegateQueue;
-
 - (void)getDelegate:(id *)delegatePtr delegateQueue:(dispatch_queue_t *)delegateQueuePtr;
 - (void)setDelegate:(id)delegate delegateQueue:(dispatch_queue_t)delegateQueue;
 - (void)synchronouslySetDelegate:(id)delegate delegateQueue:(dispatch_queue_t)delegateQueue;
@@ -166,10 +154,8 @@ typedef enum GCDAsyncSocketError GCDAsyncSocketError;
 **/
 - (BOOL)isIPv4Enabled;
 - (void)setIPv4Enabled:(BOOL)flag;
-
 - (BOOL)isIPv6Enabled;
 - (void)setIPv6Enabled:(BOOL)flag;
-
 - (BOOL)isIPv4PreferredOverIPv6;
 - (void)setPreferIPv4OverIPv6:(BOOL)flag;
 
@@ -378,18 +364,22 @@ typedef enum GCDAsyncSocketError GCDAsyncSocketError;
  * 
  * If a socket is in the process of connecting, it may be neither disconnected nor connected.
 **/
-- (BOOL)isDisconnected;
-- (BOOL)isConnected;
+@property BOOL connected;
+//- (BOOL)isDisconnected;
+//- (BOOL)isConnected;
 
 /**
  * Returns the local or remote host and port to which this socket is connected, or nil and 0 if not connected.
  * The host will be an IP address.
 **/
-- (NSString *)connectedHost;
-- (uint16_t)connectedPort;
+@property (nonatomic, strong) NSString *connectedHost, *localHost;
+@property (nonatomic) NSUInteger connectedPort, localPort;
 
-- (NSString *)localHost;
-- (uint16_t)localPort;
+//- (NSString *)connectedHost;
+//- (uint16_t)connectedPort;
+
+//- (NSString *)localHost;
+//- (uint16_t)localPort;
 
 /**
  * Returns the local or remote address to which this socket is connected,
@@ -404,15 +394,17 @@ typedef enum GCDAsyncSocketError GCDAsyncSocketError;
  * Returns whether the socket is IPv4 or IPv6.
  * An accepting socket may be both.
 **/
-- (BOOL)isIPv4;
-- (BOOL)isIPv6;
+@property (readonly) BOOL isIPv4, isIPv6, isSecure;
+
+//- (BOOL)isIPv4;
+//- (BOOL)isIPv6;
 
 /**
  * Returns whether or not the socket has been secured via SSL/TLS.
  * 
  * See also the startTLS method.
 **/
-- (BOOL)isSecure;
+//- (BOOL)isSecure;
 
 #pragma mark Reading
 

@@ -26,19 +26,15 @@
  * you may choose to use only a file logger and a tty logger.
 **/
 
-@interface DDTTYLogger : DDAbstractLogger <DDLogger>
-{
+@interface DDTTYLogger : DDAbstractLogger <DDLogger>{
+
 	BOOL isaTTY;
-	
 	NSDateFormatter *dateFormatter;
-	
 	char *app; // Not null terminated
 	char *pid; // Not null terminated
-	
 	size_t appLen;
 	size_t pidLen;
 }
-
 + (DDTTYLogger *)sharedInstance;
 
 // Inherited from DDAbstractLogger

@@ -13,7 +13,6 @@
 #define FORMAT(format, ...) [NSString stringWithFormat:(format), ##__VA_ARGS__]
 
 @interface EchoServerAppDelegate (PrivateAPI)
-
 - (void)logError:(NSString *)msg;
 - (void)logInfo:(NSString *)msg;
 - (void)logMessage:(NSString *)msg;
@@ -21,7 +20,6 @@
 @end
 
 @implementation EchoServerAppDelegate
-
 - (id)init	{	if (self != super.init) return nil;
 
 // Setup our logging framework. Logging isn't used in this file, but can optionally be enabled in GCDAsyncSocket.
@@ -44,65 +42,49 @@
 	_isRunning = NO;
 	return self;
 }
-
 - (void)awakeFromNib	{	[_logView setString:@""]; [_logView setBackgroundColor:NSColor.darkGrayColor];	}
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification{
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
-{
 	// Reserved
 }
+- (void)scrollToBottom{
 
-- (void)scrollToBottom
-{
 	NSScrollView *scrollView = [_logView enclosingScrollView];
 	NSPoint newScrollOrigin;
 	newScrollOrigin = [[scrollView documentView] isFlipped] ?
 		 NSMakePoint(0.0F, NSMaxY([[scrollView documentView]frame])) : NSZeroPoint;
 	[[scrollView documentView] scrollPoint:newScrollOrigin];
 }
+- (void)logError:(NSString *)msg{
 
-- (void)logError:(NSString *)msg
-{
 	NSString *paragraph = [NSString stringWithFormat:@"%@\n", msg];
-	
 	NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithCapacity:1];
 	[attributes setObject:[NSColor redColor] forKey:NSForegroundColorAttributeName];
-	
 	NSAttributedString *as = [[NSAttributedString alloc] initWithString:paragraph attributes:attributes];
 	[as autorelease];
-	
 	[[_logView textStorage] appendAttributedString:as];
 	[self scrollToBottom];
 }
+- (void)logInfo:(NSString *)msg{
 
-- (void)logInfo:(NSString *)msg
-{
 	NSString *paragraph = [NSString stringWithFormat:@"%@\n", msg];
-	
 	NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithCapacity:1];
 	[attributes setObject:[NSColor purpleColor] forKey:NSForegroundColorAttributeName];
-	
 	NSAttributedString *as = [[NSAttributedString alloc] initWithString:paragraph attributes:attributes];
 	[as autorelease];
-	
 	[[_logView textStorage] appendAttributedString:as];
 	[self scrollToBottom];
 }
+- (void)logMessage:(NSString *)msg{
 
-- (void)logMessage:(NSString *)msg
-{
 	NSString *paragraph = [NSString stringWithFormat:@"%@\n", msg];
-	
 	NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithCapacity:1];
 	[attributes setObject:[NSColor blackColor] forKey:NSForegroundColorAttributeName];
-	
 	NSAttributedString *as = [[NSAttributedString alloc] initWithString:paragraph attributes:attributes];
 	[as autorelease];
-	
 	[[_logView textStorage] appendAttributedString:as];
 	[self scrollToBottom];
 }
-
 - (IBAction)startStop:(id)sender
 {
 
@@ -110,23 +92,19 @@
 	if(!_isRunning)
 	{
 		port = [self.portField intValue];
-		
 		if(port < 0 || port > 65535)
 		{
 			[self.portField setStringValue:@""];
 			port = 0;
 		}
-		
 		NSError *error = nil;
 		if(![self.listenSocket acceptOnPort:port error:&error])
 		{
 			[self logError:FORMAT(@"Error starting server: %@", error)];
 			return;
 		}
-		
 		[self logInfo:FORMAT(@"Echo server started on port %hu", [self.listenSocket localPort])];
 		self.isRunning = YES;
-		
 		[self.portField setEnabled:NO];
 		[self.startStopButton setTitle:@"Stop"];
 	}
@@ -134,7 +112,6 @@
 	{
 		// Stop accepting connections
 		[self.listenSocket disconnect];
-		
 		// Stop any client connections
 		@synchronized(self.connectedSockets)
 		{
@@ -147,33 +124,25 @@
 				[self.connectedSockets[i] disconnect];
 			}
 		}
-		
 		[self logInfo:@"Stopped Echo server"];
 		self.isRunning = false;
-		
 		[_portField setEnabled:YES];
 		[self.startStopButton setTitle:@"Start"];
 	}
 	_webView.mainFrameURL = [NSString stringWithFormat:@"http://localhost:%i",port];
 }
+- (void)socket:(GCDAsyncSocket *)sock didAcceptNewSocket:(GCDAsyncSocket *)newSocket{
 
-- (void)socket:(GCDAsyncSocket *)sock didAcceptNewSocket:(GCDAsyncSocket *)newSocket
-{
 	// This method is executed on the socketQueue (not the main thread)
-	
 	@synchronized(_connectedSockets)
 	{
 		[_connectedSockets addObject:newSocket];
 	}
-	
 	NSString *host = [newSocket connectedHost];
 	UInt16 port = [newSocket connectedPort];
-	
 	dispatch_async(dispatch_get_main_queue(), ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-		
+		NSAutoreleasePool *pool = NSAutoreleasePool.new;
 		[self logInfo:FORMAT(@"Accepted client %@:%hu", host, port)];
-		
 		[pool release];
 	});
 
@@ -207,25 +176,20 @@
 		
 
 	NSData *welcomeData = [welcomeMsg dataUsingEncoding:NSUTF8StringEncoding];
-	
 	[newSocket writeData:welcomeData withTimeout:-1 tag:WELCOME_MSG];
-	
 	[newSocket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:READ_TIMEOUT tag:0];
 }
+- (void)socket:(GCDAsyncSocket *)sock didWriteDataWithTag:(long)tag{
 
-- (void)socket:(GCDAsyncSocket *)sock didWriteDataWithTag:(long)tag
-{
 	if (tag == ECHO_MSG)
 	{
 		[sock readDataToData:[GCDAsyncSocket CRLFData] withTimeout:READ_TIMEOUT tag:0];
 	}
 }
+- (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag{
 
-- (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag
-{
 	dispatch_async(dispatch_get_main_queue(), ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-		
+		NSAutoreleasePool *pool = NSAutoreleasePool.new;
 		NSData *strData = [data subdataWithRange:NSMakeRange(0, [data length] - 2)];
 		NSString *msg = [[[NSString alloc] initWithData:strData encoding:NSUTF8StringEncoding] autorelease];
 		if (msg)
@@ -236,10 +200,8 @@
 		{
 			[self logError:@"Error converting received data into UTF-8 String"];
 		}
-		
 		[pool release];
 	});
-	
 	// Echo message back to client
 	[sock writeData:data withTimeout:-1 tag:ECHO_MSG];
 }
@@ -251,33 +213,26 @@
 **/
 - (NSTimeInterval)socket:(GCDAsyncSocket *)sock shouldTimeoutReadWithTag:(long)tag
                                                                  elapsed:(NSTimeInterval)elapsed
-                                                               bytesDone:(NSUInteger)length
-{
+                                                               bytesDone:(NSUInteger)length{
+
 	if (elapsed <= READ_TIMEOUT)
 	{
 		NSString *warningMsg = @"Are you still there?\r\n";
 		NSData *warningData = [warningMsg dataUsingEncoding:NSUTF8StringEncoding];
-		
 		[sock writeData:warningData withTimeout:-1 tag:WARNING_MSG];
-		
 		return READ_TIMEOUT_EXTENSION;
 	}
-	
 	return 0.0;
 }
+- (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err{
 
-- (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err
-{
 	if (sock != _listenSocket)
 	{
 		dispatch_async(dispatch_get_main_queue(), ^{
-			NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-			
+			NSAutoreleasePool *pool = NSAutoreleasePool.new;
 			[self logInfo:FORMAT(@"Client Disconnected")];
-			
 			[pool release];
 		});
-		
 		@synchronized(_connectedSockets)
 		{
 			[_connectedSockets removeObject:sock];

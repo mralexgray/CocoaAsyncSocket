@@ -683,7 +683,7 @@
                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         </textFieldCell>
                                         <connections>
-                                            <binding destination="494" name="value" keyPath="self.listenSo" id="VUr-VO-sVP"/>
+                                            <binding destination="494" name="value" keyPath="self.listenSocket.localPort" id="tKR-lp-tke"/>
                                         </connections>
                                     </textField>
                                     <button verticalHuggingPriority="750" id="537">

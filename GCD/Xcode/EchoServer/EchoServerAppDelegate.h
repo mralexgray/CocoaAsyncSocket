@@ -18,7 +18,6 @@
 	
 @property (assign) IBOutlet NSWindow *window;
 @property (assign) IBOutlet WebView *webView;
-
 - (IBAction)startStop:(id)sender;
 
 @end

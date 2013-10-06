@@ -26,11 +26,10 @@
  * you may choose to use a file logger and a tty logger.
 **/
 
-@interface DDASLLogger : DDAbstractLogger <DDLogger>
-{
+@interface DDASLLogger : DDAbstractLogger <DDLogger>{
+
 	aslclient client;
 }
-
 + (DDASLLogger *)sharedInstance;
 
 // Inherited from DDAbstractLogger

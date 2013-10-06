@@ -62,25 +62,20 @@
 @property (readwrite, assign) NSUInteger maximumNumberOfLogFiles;
 
 // Public methods
-
 - (NSString *)logsDirectory;
-
 - (NSArray *)unsortedLogFilePaths;
 - (NSArray *)unsortedLogFileNames;
 - (NSArray *)unsortedLogFileInfos;
-
 - (NSArray *)sortedLogFilePaths;
 - (NSArray *)sortedLogFileNames;
 - (NSArray *)sortedLogFileInfos;
 
 // Private methods (only to be used by DDFileLogger)
-
 - (NSString *)createNewLogFile;
 
 @optional
 
 // Notifications from DDFileLogger
-
 - (void)didArchiveLogFile:(NSString *)logFilePath;
 - (void)didRollAndArchiveLogFile:(NSString *)logFilePath;
 
@@ -100,12 +95,11 @@
 // 
 // Archived log files are automatically deleted according to the maximumNumberOfLogFiles property.
 
-@interface DDLogFileManagerDefault : NSObject <DDLogFileManager>
-{
+@interface DDLogFileManagerDefault : NSObject <DDLogFileManager>{
+
 	NSUInteger maximumNumberOfLogFiles;
 	NSString *_logsDirectory;
 }
-
 - (id)init;
 - (id)initWithLogsDirectory:(NSString *)logsDirectory;
 
@@ -122,8 +116,8 @@
 // In addition to the convenience of having a logical default formatter,
 // it will also provide a template that makes it easy for developers to copy and change.
 
-@interface DDLogFileFormatterDefault : NSObject <DDLogFormatter>
-{
+@interface DDLogFileFormatterDefault : NSObject <DDLogFormatter>{
+
 	NSDateFormatter *dateFormatter;
 }
 
@@ -131,19 +125,15 @@
 
 #pragma mark -
 
-@interface DDFileLogger : DDAbstractLogger <DDLogger>
-{
+@interface DDFileLogger : DDAbstractLogger <DDLogger>{
+
 	id <DDLogFileManager> logFileManager;
-	
 	DDLogFileInfo *currentLogFileInfo;
 	NSFileHandle *currentLogFileHandle;
-	
 	NSTimer *rollingTimer;
-	
 	unsigned long long maximumFileSize;
 	NSTimeInterval rollingFrequency;
 }
-
 - (id)init;
 - (id)initWithLogFileManager:(id <DDLogFileManager>)logFileManager;
 
@@ -180,7 +170,6 @@
 
 
 // You can optionally force the current log file to be rolled with this method.
-
 - (void)rollLogFile;
 
 // Inherited from DDAbstractLogger
@@ -205,16 +194,13 @@
 // If you absolutely must get updated values,
 // you can invoke the reset method which will clear the cache.
 
-@interface DDLogFileInfo : NSObject
-{
+@interface DDLogFileInfo : NSObject{
+
 	NSString *filePath;
 	NSString *fileName;
-	
 	NSDictionary *fileAttributes;
-	
 	NSDate *creationDate;
 	NSDate *modificationDate;
-	
 	unsigned long long fileSize;
 }
 
@@ -233,9 +219,7 @@
 @property (nonatomic, readwrite) BOOL isArchived;
 
 + (id)logFileWithPath:(NSString *)filePath;
-
 - (id)initWithFilePath:(NSString *)filePath;
-
 - (void)reset;
 - (void)renameFile:(NSString *)newFileName;
 
@@ -259,9 +243,7 @@
 // 
 // For example:
 // log-ABC123.txt -> log-ABC123.archived.txt
-
 - (BOOL)hasExtensionAttributeWithName:(NSString *)attrName;
-
 - (void)addExtensionAttributeWithName:(NSString *)attrName;
 - (void)removeExtensionAttributeWithName:(NSString *)attrName;
 
@@ -269,14 +251,11 @@
 
 // Normal use of extended attributes used everywhere else,
 // such as on Macs and on iPhone devices.
-
 - (BOOL)hasExtendedAttributeWithName:(NSString *)attrName;
-
 - (void)addExtendedAttributeWithName:(NSString *)attrName;
 - (void)removeExtendedAttributeWithName:(NSString *)attrName;
 
 #endif
-
 - (NSComparisonResult)reverseCompareByCreationDate:(DDLogFileInfo *)another;
 - (NSComparisonResult)reverseCompareByModificationDate:(DDLogFileInfo *)another;
 

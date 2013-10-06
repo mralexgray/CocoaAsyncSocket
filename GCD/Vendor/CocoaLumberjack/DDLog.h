@@ -388,7 +388,6 @@ NSString *ExtractFileNameWithoutExtension(const char *filePath, BOOL copy);
 
 @protocol DDLogger <NSObject>
 @required
-
 - (void)logMessage:(DDLogMessage *)logMessage;
 
 /**
@@ -465,7 +464,6 @@ NSString *ExtractFileNameWithoutExtension(const char *filePath, BOOL copy);
  * The formatter may also optionally filter the log message by returning nil,
  * in which case the logger will not log the message.
 **/
-
 - (NSString *)formatLogMessage:(DDLogMessage *)logMessage;
 
 @end
@@ -541,7 +539,6 @@ NSString *ExtractFileNameWithoutExtension(const char *filePath, BOOL copy);
 // That is, it expects the given strings to exist for the duration of the object's lifetime,
 // and it expects the given strings to be immutable.
 // In other words, it does not copy these strings, it simply points to them.
-
 - (id)initWithLogMsg:(NSString *)logMsg
                level:(int)logLevel
                 flag:(int)logFlag
@@ -588,15 +585,14 @@ NSString *ExtractFileNameWithoutExtension(const char *filePath, BOOL copy);
  * and they can ACCESS THE FORMATTER VARIABLE DIRECTLY from within their logMessage method!
 **/
 
-@interface DDAbstractLogger : NSObject <DDLogger>
-{
+@interface DDAbstractLogger : NSObject <DDLogger>{
+
 	id <DDLogFormatter> formatter;
 	
 #if GCD_MAYBE_AVAILABLE
 	dispatch_queue_t loggerQueue;
 #endif
 }
-
 - (id <DDLogFormatter>)logFormatter;
 - (void)setLogFormatter:(id <DDLogFormatter>)formatter;
 
