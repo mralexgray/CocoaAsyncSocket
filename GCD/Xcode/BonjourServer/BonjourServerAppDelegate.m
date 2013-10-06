@@ -43,7 +43,7 @@ static const int ddLogLevel = LOG_LEVEL_VERBOSE;
 		// Obviously you will be using your own custom service type.
 		
 		netService = [[NSNetService alloc] initWithDomain:@"local."
-		                                             type:@"_YourServiceName._tcp."
+		                                             type:@"_http._tcp."
 		                                             name:@""
 		                                             port:port];
 		

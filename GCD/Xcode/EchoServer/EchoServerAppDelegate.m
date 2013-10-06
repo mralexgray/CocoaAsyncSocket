@@ -20,52 +20,32 @@
 
 @end
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 @implementation EchoServerAppDelegate
 
-@synthesize window;
+- (id)init	{	if (self != super.init) return nil;
 
-- (id)init
-{
-	if((self = [super init]))
-	{
-		// Setup our logging framework.
-		// Logging isn't used in this file, but can optionally be enabled in GCDAsyncSocket.
-		[DDLog addLogger:[DDTTYLogger sharedInstance]];
-		
-		// Setup our server socket (GCDAsyncSocket).
-		// The socket will invoke our delegate methods using the usual delegate paradigm.
-		// However, it will invoke the delegate methods on a specified GCD delegate dispatch queue.
-		// 
-		// Now we can setup these delegate dispatch queues however we want.
-		// Here are a few examples:
-		// 
-		// - A different delegate queue for each client connection.
-		// - Simply use the main dispatch queue, so the delegate methods are invoked on the main thread.
-		// - Add each client connection to the same dispatch queue.
-		// 
-		// The best approach for your application will depend upon convenience, requirements and performance.
-		// 
-		// For this simple example, we're just going to share the same dispatch queue amongst all client connections.
-		
-		socketQueue = dispatch_queue_create("SocketQueue", NULL);
-		listenSocket = [[GCDAsyncSocket alloc] initWithDelegate:self delegateQueue:socketQueue];
-		
-		// Setup an array to store all accepted client connections
-		connectedSockets = [[NSMutableArray alloc] initWithCapacity:1];
-		
-		isRunning = NO;
-	}
+// Setup our logging framework. Logging isn't used in this file, but can optionally be enabled in GCDAsyncSocket.
+	[DDLog addLogger:[DDTTYLogger sharedInstance]];
+	
+// Setup our server socket (GCDAsyncSocket). 	The socket will invoke our delegate methods using the usual delegate paradigm. However, it will invoke the delegate methods on a specified GCD delegate dispatch queue.
+
+/* Now we can setup these delegate dispatch queues however we want, Here are a few examples:
+	- A different delegate queue for each client connection.
+	- Simply use the main dispatch queue, so the delegate methods are invoked on the main thread.
+	- Add each client connection to the same dispatch queue.
+
+	The best approach for your application will depend upon convenience, requirements and performance.
+	For this simple example, we're just going to share the same dispatch queue amongst all client connections. */
+
+	_socketQueue 	= dispatch_queue_create("SocketQueue", NULL);
+	_listenSocket 	= [GCDAsyncSocket.alloc initWithDelegate:self delegateQueue:_socketQueue];
+	// Setup an array to store all accepted client connections
+	_connectedSockets = [[NSMutableArray alloc] initWithCapacity:1];
+	_isRunning = NO;
 	return self;
 }
 
-- (void)awakeFromNib
-{
-	[logView setString:@""];
-}
+- (void)awakeFromNib	{	[_logView setString:@""]; [_logView setBackgroundColor:NSColor.darkGrayColor];	}
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
@@ -74,14 +54,10 @@
 
 - (void)scrollToBottom
 {
-	NSScrollView *scrollView = [logView enclosingScrollView];
+	NSScrollView *scrollView = [_logView enclosingScrollView];
 	NSPoint newScrollOrigin;
-	
-	if ([[scrollView documentView] isFlipped])
-		newScrollOrigin = NSMakePoint(0.0F, NSMaxY([[scrollView documentView] frame]));
-	else
-		newScrollOrigin = NSMakePoint(0.0F, 0.0F);
-	
+	newScrollOrigin = [[scrollView documentView] isFlipped] ?
+		 NSMakePoint(0.0F, NSMaxY([[scrollView documentView]frame])) : NSZeroPoint;
 	[[scrollView documentView] scrollPoint:newScrollOrigin];
 }
 
@@ -95,7 +71,7 @@
 	NSAttributedString *as = [[NSAttributedString alloc] initWithString:paragraph attributes:attributes];
 	[as autorelease];
 	
-	[[logView textStorage] appendAttributedString:as];
+	[[_logView textStorage] appendAttributedString:as];
 	[self scrollToBottom];
 }
 
@@ -109,7 +85,7 @@
 	NSAttributedString *as = [[NSAttributedString alloc] initWithString:paragraph attributes:attributes];
 	[as autorelease];
 	
-	[[logView textStorage] appendAttributedString:as];
+	[[_logView textStorage] appendAttributedString:as];
 	[self scrollToBottom];
 }
 
@@ -123,68 +99,71 @@
 	NSAttributedString *as = [[NSAttributedString alloc] initWithString:paragraph attributes:attributes];
 	[as autorelease];
 	
-	[[logView textStorage] appendAttributedString:as];
+	[[_logView textStorage] appendAttributedString:as];
 	[self scrollToBottom];
 }
 
 - (IBAction)startStop:(id)sender
 {
-	if(!isRunning)
+
+	int port;
+	if(!_isRunning)
 	{
-		int port = [portField intValue];
+		port = [self.portField intValue];
 		
 		if(port < 0 || port > 65535)
 		{
-			[portField setStringValue:@""];
+			[self.portField setStringValue:@""];
 			port = 0;
 		}
 		
 		NSError *error = nil;
-		if(![listenSocket acceptOnPort:port error:&error])
+		if(![self.listenSocket acceptOnPort:port error:&error])
 		{
 			[self logError:FORMAT(@"Error starting server: %@", error)];
 			return;
 		}
 		
-		[self logInfo:FORMAT(@"Echo server started on port %hu", [listenSocket localPort])];
-		isRunning = YES;
+		[self logInfo:FORMAT(@"Echo server started on port %hu", [self.listenSocket localPort])];
+		self.isRunning = YES;
 		
-		[portField setEnabled:NO];
-		[startStopButton setTitle:@"Stop"];
+		[self.portField setEnabled:NO];
+		[self.startStopButton setTitle:@"Stop"];
 	}
 	else
 	{
 		// Stop accepting connections
-		[listenSocket disconnect];
+		[self.listenSocket disconnect];
 		
 		// Stop any client connections
-		@synchronized(connectedSockets)
+		@synchronized(self.connectedSockets)
 		{
 			NSUInteger i;
-			for (i = 0; i < [connectedSockets count]; i++)
+			for (i = 0; i < [self.connectedSockets count]; i++)
 			{
 				// Call disconnect on the socket,
 				// which will invoke the socketDidDisconnect: method,
 				// which will remove the socket from the list.
-				[[connectedSockets objectAtIndex:i] disconnect];
+				[self.connectedSockets[i] disconnect];
 			}
 		}
 		
 		[self logInfo:@"Stopped Echo server"];
-		isRunning = false;
+		self.isRunning = false;
 		
-		[portField setEnabled:YES];
-		[startStopButton setTitle:@"Start"];
+		[_portField setEnabled:YES];
+		[self.startStopButton setTitle:@"Start"];
 	}
+	_webView.mainFrameURL = [NSString stringWithFormat:@"http://localhost:%i",port];
 }
 
 - (void)socket:(GCDAsyncSocket *)sock didAcceptNewSocket:(GCDAsyncSocket *)newSocket
 {
 	// This method is executed on the socketQueue (not the main thread)
 	
-	@synchronized(connectedSockets)
+	@synchronized(_connectedSockets)
 	{
-		[connectedSockets addObject:newSocket];
+		[_connectedSockets addObject:newSocket];
 	}
 	
 	NSString *host = [newSocket connectedHost];
@@ -197,8 +176,36 @@
 		
 		[pool release];
 	});
-	
-	NSString *welcomeMsg = @"Welcome to the AsyncSocket Echo Server\r\n";
+
+//   exampleSocket.onmessage = function (event) { console.log(event.data); }
+
+	NSString *welcomeMsg =	@"<!DOCTYPE html><html><head><meta charset='UTF-8' /><style type='text/css>"
+									"<!--"
+									".chat_wrapper {	width: 100%;margin-right: auto;margin-left: auto;"
+									"						background: #CCCCCC;	border: 1px solid #999999;	padding: 10px;"
+									"						font: 12px 'UbuntuMono-Bold',tahoma,verdana,arial,sans-serif; }"
+									".chat_wrapper .message_box {	background: #FFFFFF;	height: 100%	overflow: auto;"
+									"						padding: 10px;	border: 1px solid #999999;	}"
+									".chat_wrapper .panel input{	padding: 2px 2px 2px 5px;}"
+									".system_msg 	{color: steel ; font-style: italic;}"
+									".user_name 		{font-weight:bold;}"
+									".user_message 	{color: #88B6E0;}"
+									"-->"
+									"</style><script src='http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js'></script>"
+									"<script src='http://mrgray.com/websocket-example/socket.js'></script>"
+									"</head><body>"
+								   @"Welcome to the AsyncSocket Echo Server\r\n"
+									"<div id='poop' style='background-color:red;'><h1>HELLO</h1></div>"
+		"<script>		//create a new WebSocket object."
+		"websocket = new WebSocket('ws://localhost:4444');"
+		"websocket.onopen = function(evt) { /* do stuff */ }; //on open event"
+		"websocket.onclose = function(evt) { /* do stuff */ }; //on close event"
+		"websocket.onmessage = function(evt) { /* do stuff */ }; //on message event"
+		"websocket.onerror = function(evt) { /* do stuff */ }; //on error event"
+		"websocket.send(message); //send method"
+		"websocket.close(); //close method";
+		
+
 	NSData *welcomeData = [welcomeMsg dataUsingEncoding:NSUTF8StringEncoding];
 	
 	[newSocket writeData:welcomeData withTimeout:-1 tag:WELCOME_MSG];
@@ -261,7 +268,7 @@
 
 - (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err
 {
-	if (sock != listenSocket)
+	if (sock != _listenSocket)
 	{
 		dispatch_async(dispatch_get_main_queue(), ^{
 			NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -271,9 +278,9 @@
 			[pool release];
 		});
 		
-		@synchronized(connectedSockets)
+		@synchronized(_connectedSockets)
 		{
-			[connectedSockets removeObject:sock];
+			[_connectedSockets removeObject:sock];
 		}
 	}
 }
